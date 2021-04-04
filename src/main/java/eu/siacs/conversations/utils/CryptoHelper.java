@@ -9,8 +9,7 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
@@ -24,15 +23,13 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.regex.Pattern;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Message;
-import eu.siacs.conversations.http.AesGcmURLStreamHandler;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public final class CryptoHelper {
 
@@ -257,7 +254,7 @@ public final class CryptoHelper {
     public static String getFingerprint(String value) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-1");
-            return bytesToHex(md.digest(value.getBytes("UTF-8")));
+            return bytesToHex(md.digest(value.getBytes(StandardCharsets.UTF_8)));
         } catch (Exception e) {
             return "";
         }
@@ -275,28 +272,6 @@ public final class CryptoHelper {
                 return R.string.encryption_choice_unencrypted;
             default:
                 return R.string.encryption_choice_pgp;
-        }
-    }
-
-    public static URL toAesGcmUrl(URL url) {
-        if (!url.getProtocol().equalsIgnoreCase("https")) {
-            return url;
-        }
-        try {
-            return new URL(AesGcmURLStreamHandler.PROTOCOL_NAME + url.toString().substring(url.getProtocol().length()));
-        } catch (MalformedURLException e) {
-            return url;
-        }
-    }
-
-    public static URL toHttpsUrl(URL url) {
-        if (!url.getProtocol().equalsIgnoreCase(AesGcmURLStreamHandler.PROTOCOL_NAME)) {
-            return url;
-        }
-        try {
-            return new URL("https" + url.toString().substring(url.getProtocol().length()));
-        } catch (MalformedURLException e) {
-            return url;
         }
     }
 

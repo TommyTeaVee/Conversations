@@ -1,5 +1,119 @@
 # Changelog
 
+### Version 2.9.9
+
+* Various bug fixes around Tor support
+* Improve call compatibility with Dino
+
+### Version 2.9.8
+
+* Verify A/V calls with preexisting OMEMO sessions
+* Improve compatibility with non libwebrtc WebRTC implementations
+
+### Version 2.9.7
+
+* Ability to select incoming call ringtone
+* Fix OpenPGP key id discovery for OpenKeychain 5.6+
+* Properly verify punycode TLS certificates
+* Improve stability of RTP session establishment (calling)
+
+### Version 2.9.6
+
+* Show call button for offline contacts if they previously announced support
+* Back button no longer ends call when call is connected
+* bug fixes
+
+### Version 2.9.5
+
+* Quicksy: Automatically receive verification SMS
+
+### Version 2.9.4
+* minor stability improvements for A/V calls
+* Conversations releases from here on forward require Android 5
+
+### Version 2.9.3
+
+* Fixed connectivity issues when different accounts used different SCRAM mechanisms
+* Add support for SCRAM-SHA-512
+* Allow P2P (Jingle) file transfer with self contact
+
+### Version 2.9.2
+
+* Offer Easy Invite generation on supporting servers
+* Display GIFs send from Movim
+* store avatars in cache
+
+### Version 2.9.1
+
+* fixed search on Android <= 5
+* optimize memory consumption
+
+### Version 2.9.0
+
+* Search individual conversations
+* Notify user if message delivery fails
+* Remember display names (nicks) from Quicksy users across restarts
+* Add button to start Orbot (Tor) from notification if necessary
+
+### Version 2.8.10
+
+* Handle GPX files
+* Improve performance for backup restore
+* bug fixes
+
+### Version 2.8.9
+
+* add 'Return to chat' to audio call screen
+* Improve keyboard shortcuts
+* bug fixes
+
+### Version 2.8.8
+
+* Fixed notifications not showing up under certain conditions
+* Fixed compatibility issues and crashes related to A/V calls
+
+### Version 2.8.7
+
+* Show help button if A/V call fails
+* Fixed some annoying crashes
+* Fixed Jingle connections (file transfer + calls) with bare JIDs
+
+### Version 2.8.6
+
+* Offer to record voice message when callee is busy
+
+### Version 2.8.5
+
+* Reduce echo during calls on some devices
+* Fix login when passwords contains special characters
+* Play dial and busy tones on speaker during video calls
+
+### Version 2.8.4
+
+* Rework Login with certificate UI
+* Add ability to pin chats on top (add to favorites)
+
+### Version 2.8.3
+
+* Move call icon to the left in order to keep other toolbar icons in a consistent place
+* Show call duration during audio calls
+* Tie breaking for A/V calls (the same two people calling each other at the same time)
+
+### Version 2.8.2
+
+* Add button to switch camera during video call
+* Fixed voice calls on tablets
+
+### Version 2.8.1
+
+* Audible feedback (dialing, call started, call ended) for voice calls.
+* Fixed issue with retrying failed video call
+
+### Version 2.8.0
+
+* Audio/Video calls (Requires server support in form of STUN and TURN servers discoverable via XEP-0215)
+
+
 ### Version 2.7.1
 
 * Fix avatar selection on some Android 10 devices
@@ -353,9 +467,8 @@
 * Icons for attach menu
 
 ### Version 1.16.2
-* change mam catchup strategie. support mam:1
+* change mam catchup strategy. support mam:1
 * bug fixes
-
 
 ### Version 1.16.1
 * UI performance fixes
@@ -406,7 +519,7 @@
 * bug fixes
 
 ### Version 1.14.6
-* make error notification dismissable
+* make error notification dismissible
 * bug fixes
 
 
@@ -430,7 +543,7 @@
 * bug fixes
 
 ### Version 1.14.0
-* Improvments for N
+* Improvements for N
 * Quick Reply to Notifications on N
 * Don't download avatars and files when data saver is on
 * bug fixes
@@ -608,7 +721,7 @@
 
 ### Version 1.7.0
 * CAPTCHA support
-* SASL EXTERNAL (client certifiates)
+* SASL EXTERNAL (client certificates)
 * fetching MUC history via MAM
 * redownload deleted files from HTTP hosts
 * Expert setting to automatically set presence
@@ -716,7 +829,7 @@
 * accept more ciphers
 
 ### Version 1.0
-* MUC controls (Affiliaton changes)
+* MUC controls (Affiliation changes)
 * Added download button to notification
 * Added check box to hide offline contacts
 * Use Material theme and icons on Android L
@@ -822,7 +935,7 @@
 * XEP-0333. Mark whether the other party has read your messages
 * Delayed messages are now tagged properly
 * Share images from the Gallery
-* Infinit history scrolling
+* Infinite history scrolling
 * Mark the last used presence in presence selection dialog
 
 ### Version 0.3

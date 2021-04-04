@@ -1,7 +1,8 @@
 package eu.siacs.conversations.utils;
 
 import android.net.Uri;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -14,7 +15,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class XmppUri {
 
@@ -22,6 +23,8 @@ public class XmppUri {
     public static final String ACTION_MESSAGE = "message";
     public static final String ACTION_REGISTER = "register";
     public static final String ACTION_ROSTER = "roster";
+    public static final String PARAMETER_PRE_AUTH = "preauth";
+    public static final String PARAMETER_IBR = "ibr";
     private static final String OMEMO_URI_PARAM = "omemo-sid-";
     protected Uri uri;
     protected String jid;
@@ -29,12 +32,12 @@ public class XmppUri {
     private Map<String, String> parameters = Collections.emptyMap();
     private boolean safeSource = true;
 
-    public XmppUri(String uri) {
+    public XmppUri(final String uri) {
         try {
             parse(Uri.parse(uri));
         } catch (IllegalArgumentException e) {
             try {
-                jid = Jid.of(uri).asBareJid().toString();
+                jid = Jid.ofEscaped(uri).asBareJid().toEscapedString();
             } catch (IllegalArgumentException e2) {
                 jid = null;
             }
@@ -137,7 +140,7 @@ public class XmppUri {
             if (segments.size() >= 2 && segments.get(1).contains("@")) {
                 // sample : https://conversations.im/i/foo@bar.com
                 try {
-                    jid = Jid.of(lameUrlDecode(segments.get(1))).toString();
+                    jid = Jid.ofEscaped(lameUrlDecode(segments.get(1))).toEscapedString();
                 } catch (Exception e) {
                     jid = null;
                 }
@@ -172,11 +175,7 @@ public class XmppUri {
                 jid = null;
             }
         } else {
-            try {
-                jid = Jid.of(uri.toString()).asBareJid().toString();
-            } catch (final IllegalArgumentException ignored) {
-                jid = null;
-            }
+            jid = null;
         }
     }
 
@@ -195,7 +194,7 @@ public class XmppUri {
 
     public Jid getJid() {
         try {
-            return this.jid == null ? null : Jid.of(this.jid);
+            return this.jid == null ? null : Jid.ofEscaped(this.jid);
         } catch (IllegalArgumentException e) {
             return null;
         }
@@ -206,7 +205,7 @@ public class XmppUri {
             return false;
         }
         try {
-            Jid.of(jid);
+            Jid.ofEscaped(jid);
             return true;
         } catch (IllegalArgumentException e) {
             return false;

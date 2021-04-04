@@ -2,7 +2,6 @@ package eu.siacs.conversations.crypto.axolotl;
 
 import android.util.Base64;
 import android.util.Log;
-import android.util.SparseArray;
 
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
@@ -24,7 +23,7 @@ import javax.crypto.spec.SecretKeySpec;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.xml.Element;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class XmppAxolotlMessage {
     public static final String CONTAINERTAG = "encrypted";
@@ -60,7 +59,7 @@ public class XmppAxolotlMessage {
             switch (keyElement.getName()) {
                 case KEYTAG:
                     try {
-                        Integer recipientId = Integer.parseInt(keyElement.getAttribute(REMOTEID));
+                        int recipientId = Integer.parseInt(keyElement.getAttribute(REMOTEID));
                         byte[] key = Base64.decode(keyElement.getContent().trim(), Base64.DEFAULT);
                         boolean isPreKey = keyElement.getAttributeAsBoolean("prekey");
                         this.keys.add(new XmppAxolotlSession.AxolotlKey(recipientId, key, isPreKey));
@@ -146,7 +145,7 @@ public class XmppAxolotlMessage {
         return ciphertext != null;
     }
 
-    void encrypt(String plaintext) throws CryptoFailedException {
+    void encrypt(final String plaintext) throws CryptoFailedException {
         try {
             SecretKey secretKey = new SecretKeySpec(innerKey, KEYTYPE);
             IvParameterSpec ivSpec = new IvParameterSpec(iv);

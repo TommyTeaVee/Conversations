@@ -1,19 +1,23 @@
 package eu.siacs.conversations.ui.adapter;
 
-import android.databinding.DataBindingUtil;
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
-import android.support.v7.widget.RecyclerView;
 import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import androidx.annotation.NonNull;
+import androidx.databinding.DataBindingUtil;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.common.base.Optional;
 
 import java.util.List;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ConversationListRowBinding;
 import eu.siacs.conversations.entities.Conversation;
+import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.ui.ConversationFragment;
 import eu.siacs.conversations.ui.XmppActivity;
@@ -22,12 +26,13 @@ import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.EmojiWrapper;
 import eu.siacs.conversations.utils.IrregularUnicodeDetector;
 import eu.siacs.conversations.utils.UIHelper;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xmpp.jingle.OngoingRtpSession;
 
 public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapter.ConversationViewHolder> {
 
-    private XmppActivity activity;
-    private List<Conversation> conversations;
+    private final XmppActivity activity;
+    private final List<Conversation> conversations;
     private OnConversationClickListener listener;
 
     public ConversationAdapter(XmppActivity activity, List<Conversation> conversations) {
@@ -160,21 +165,35 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
             }
         }
 
-        long muted_till = conversation.getLongAttribute(Conversation.ATTRIBUTE_MUTED_TILL, 0);
-        if (muted_till == Long.MAX_VALUE) {
-            viewHolder.binding.notificationStatus.setVisibility(View.VISIBLE);
-            int ic_notifications_off = activity.getThemeResource(R.attr.icon_notifications_off, R.drawable.ic_notifications_off_black_24dp);
-            viewHolder.binding.notificationStatus.setImageResource(ic_notifications_off);
-        } else if (muted_till >= System.currentTimeMillis()) {
-            viewHolder.binding.notificationStatus.setVisibility(View.VISIBLE);
-            int ic_notifications_paused = activity.getThemeResource(R.attr.icon_notifications_paused, R.drawable.ic_notifications_paused_black_24dp);
-            viewHolder.binding.notificationStatus.setImageResource(ic_notifications_paused);
-        } else if (conversation.alwaysNotify()) {
-            viewHolder.binding.notificationStatus.setVisibility(View.GONE);
+
+        final Optional<OngoingRtpSession> ongoingCall;
+        if (conversation.getMode() == Conversational.MODE_MULTI) {
+            ongoingCall = Optional.absent();
         } else {
+            ongoingCall = activity.xmppConnectionService.getJingleConnectionManager().getOngoingRtpConnection(conversation.getContact());
+        }
+
+        if (ongoingCall.isPresent()) {
             viewHolder.binding.notificationStatus.setVisibility(View.VISIBLE);
-            int ic_notifications_none = activity.getThemeResource(R.attr.icon_notifications_none, R.drawable.ic_notifications_none_black_24dp);
-            viewHolder.binding.notificationStatus.setImageResource(ic_notifications_none);
+                final int ic_ongoing_call = activity.getThemeResource(R.attr.ic_ongoing_call_hint, R.drawable.ic_phone_in_talk_black_18dp);
+                viewHolder.binding.notificationStatus.setImageResource(ic_ongoing_call);
+        } else {
+            final long muted_till = conversation.getLongAttribute(Conversation.ATTRIBUTE_MUTED_TILL, 0);
+            if (muted_till == Long.MAX_VALUE) {
+                viewHolder.binding.notificationStatus.setVisibility(View.VISIBLE);
+                int ic_notifications_off = activity.getThemeResource(R.attr.icon_notifications_off, R.drawable.ic_notifications_off_black_24dp);
+                viewHolder.binding.notificationStatus.setImageResource(ic_notifications_off);
+            } else if (muted_till >= System.currentTimeMillis()) {
+                viewHolder.binding.notificationStatus.setVisibility(View.VISIBLE);
+                int ic_notifications_paused = activity.getThemeResource(R.attr.icon_notifications_paused, R.drawable.ic_notifications_paused_black_24dp);
+                viewHolder.binding.notificationStatus.setImageResource(ic_notifications_paused);
+            } else if (conversation.alwaysNotify()) {
+                viewHolder.binding.notificationStatus.setVisibility(View.GONE);
+            } else {
+                viewHolder.binding.notificationStatus.setVisibility(View.VISIBLE);
+                int ic_notifications_none = activity.getThemeResource(R.attr.icon_notifications_none, R.drawable.ic_notifications_none_black_24dp);
+                viewHolder.binding.notificationStatus.setImageResource(ic_notifications_none);
+            }
         }
 
         long timestamp;
@@ -183,6 +202,7 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         } else {
             timestamp = conversation.getLatestMessage().getTimeSent();
         }
+        viewHolder.binding.pinnedOnTop.setVisibility(conversation.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP,false) ? View.VISIBLE : View.GONE);
         viewHolder.binding.conversationLastupdate.setText(UIHelper.readableTimeDifference(activity, timestamp));
         AvatarWorkerTask.loadAvatar(conversation, viewHolder.binding.conversationImage, R.dimen.avatar_on_conversation_overview);
         viewHolder.itemView.setOnClickListener(v -> listener.onConversationClick(v, conversation));

@@ -1,12 +1,6 @@
 package eu.siacs.conversations.ui.adapter;
 
 import android.content.SharedPreferences;
-import android.content.res.Resources;
-import android.databinding.DataBindingUtil;
-import android.graphics.Bitmap;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,11 +9,11 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.databinding.DataBindingUtil;
+
 import com.wefika.flowlayout.FlowLayout;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
-import java.util.concurrent.RejectedExecutionException;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ContactBinding;
@@ -30,16 +24,14 @@ import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.EmojiWrapper;
 import eu.siacs.conversations.utils.IrregularUnicodeDetector;
-import eu.siacs.conversations.utils.ThemeHelper;
-import eu.siacs.conversations.utils.UIHelper;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class ListItemAdapter extends ArrayAdapter<ListItem> {
 
 	protected XmppActivity activity;
 	private boolean showDynamicTags = false;
 	private OnTagClickedListener mOnTagClickedListener = null;
-	private View.OnClickListener onTagTvClick = view -> {
+	private final View.OnClickListener onTagTvClick = view -> {
 		if (view instanceof TextView && mOnTagClickedListener != null) {
 			TextView tv = (TextView) view;
 			final String tag = tv.getText().toString();

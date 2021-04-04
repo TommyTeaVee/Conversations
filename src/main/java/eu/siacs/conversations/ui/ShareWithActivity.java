@@ -4,15 +4,15 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import eu.siacs.conversations.Config;
@@ -21,9 +21,7 @@ import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.adapter.ConversationAdapter;
-import eu.siacs.conversations.ui.service.EmojiService;
-import eu.siacs.conversations.utils.GeoHelper;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class ShareWithActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate {
 
@@ -47,7 +45,7 @@ public class ShareWithActivity extends XmppActivity implements XmppConnectionSer
 
     private static final int REQUEST_START_NEW_CONVERSATION = 0x0501;
     private ConversationAdapter mAdapter;
-    private List<Conversation> mConversations = new ArrayList<>();
+    private final List<Conversation> mConversations = new ArrayList<>();
 
 
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
@@ -66,7 +64,7 @@ public class ShareWithActivity extends XmppActivity implements XmppConnectionSer
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         if (grantResults.length > 0)
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (requestCode == REQUEST_STORAGE_PERMISSION) {
@@ -77,7 +75,7 @@ public class ShareWithActivity extends XmppActivity implements XmppConnectionSer
                     }
                 }
             } else {
-                Toast.makeText(this, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, getString(R.string.no_storage_permission, getString(R.string.app_name)), Toast.LENGTH_SHORT).show();
             }
     }
 
@@ -168,7 +166,7 @@ public class ShareWithActivity extends XmppActivity implements XmppConnectionSer
         final Conversation conversation;
             Account account;
             try {
-                account = xmppConnectionService.findAccountByJid(Jid.of(share.account));
+                account = xmppConnectionService.findAccountByJid(Jid.ofEscaped(share.account));
             } catch (final IllegalArgumentException e) {
                 account = null;
             }

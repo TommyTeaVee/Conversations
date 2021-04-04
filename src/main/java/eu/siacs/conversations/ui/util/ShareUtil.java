@@ -43,7 +43,7 @@ import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.utils.Patterns;
 import eu.siacs.conversations.utils.XmppUri;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class ShareUtil {
 
@@ -94,9 +94,10 @@ public class ShareUtil {
 			url = message.getBody();
 		} else if (message.hasFileOnRemoteHost()) {
 			resId = R.string.file_url;
-			url = message.getFileParams().url.toString();
+			url = message.getFileParams().url;
 		} else {
-			url = message.getBody().trim();
+			final Message.FileParams fileParams = message.getFileParams();
+			url = (fileParams != null && fileParams.url != null) ? fileParams.url : message.getBody().trim();
 			resId = R.string.file_url;
 		}
 		if (activity.copyTextToClipboard(url, resId)) {

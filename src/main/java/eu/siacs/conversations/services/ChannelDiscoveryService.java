@@ -1,7 +1,8 @@
 package eu.siacs.conversations.services;
 
-import android.support.annotation.NonNull;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -10,7 +11,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Executors;
@@ -23,8 +23,7 @@ import eu.siacs.conversations.entities.Room;
 import eu.siacs.conversations.http.HttpConnectionManager;
 import eu.siacs.conversations.http.services.MuclumbusService;
 import eu.siacs.conversations.parser.IqParser;
-import eu.siacs.conversations.utils.LanguageUtils;
-import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnIqPacketReceived;
 import eu.siacs.conversations.xmpp.XmppConnection;
 import eu.siacs.conversations.xmpp.stanzas.IqPacket;
@@ -35,7 +34,6 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
-import rocks.xmpp.addr.Jid;
 
 public class ChannelDiscoveryService {
 
@@ -53,13 +51,8 @@ public class ChannelDiscoveryService {
 
     void initializeMuclumbusService() {
         final OkHttpClient.Builder builder = new OkHttpClient.Builder();
-
         if (service.useTorToConnect()) {
-            try {
-                builder.proxy(HttpConnectionManager.getProxy());
-            } catch (IOException e) {
-                throw new RuntimeException("Unable to use Tor proxy", e);
-            }
+            builder.proxy(HttpConnectionManager.getProxy());
         }
         Retrofit retrofit = new Retrofit.Builder()
                 .client(builder.build())
@@ -75,7 +68,7 @@ public class ChannelDiscoveryService {
     }
 
     void discover(@NonNull final String query, Method method, OnChannelSearchResultsFound onChannelSearchResultsFound) {
-        List<Room> result = cache.getIfPresent(key(method, query));
+        final List<Room> result = cache.getIfPresent(key(method, query));
         if (result != null) {
             onChannelSearchResultsFound.onChannelSearchResultsFound(result);
             return;
@@ -225,7 +218,7 @@ public class ChannelDiscoveryService {
                     continue;
                 }
                 for (final String mucService : xmppConnection.getMucServers()) {
-                    Jid jid = Jid.of(mucService);
+                    Jid jid = Jid.ofEscaped(mucService);
                     if (!localMucServices.containsKey(jid)) {
                         localMucServices.put(jid, account);
                     }

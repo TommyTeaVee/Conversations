@@ -5,11 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.StringRes;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.ActionBar;
 import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -20,6 +15,14 @@ import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.StringRes;
+import androidx.appcompat.app.ActionBar;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
+
+import com.google.common.base.Strings;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,7 +42,7 @@ import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 import eu.siacs.conversations.ui.util.ActivityResult;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.utils.XmppUri;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class ChooseContactActivity extends AbstractSearchableListItemActivity implements MultiChoiceModeListener, AdapterView.OnItemClickListener {
     public static final String EXTRA_TITLE_RES_ID = "extra_title_res_id";
@@ -48,15 +51,15 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
     public static final String EXTRA_SHOW_ENTER_JID = "extra_show_enter_jid";
     public static final String EXTRA_CONVERSATION = "extra_conversation";
     private static final String EXTRA_FILTERED_CONTACTS = "extra_filtered_contacts";
-    private List<String> mActivatedAccounts = new ArrayList<>();
-    private Set<String> selected = new HashSet<>();
+    private final List<String> mActivatedAccounts = new ArrayList<>();
+    private final Set<String> selected = new HashSet<>();
     private Set<String> filterContacts;
 
     private boolean showEnterJid = false;
     private boolean startSearching = false;
     private boolean multiple = false;
 
-    private PendingItem<ActivityResult> postponedActivityResult = new PendingItem<>();
+    private final PendingItem<ActivityResult> postponedActivityResult = new PendingItem<>();
 
     public static Intent create(Activity activity, Conversation conversation) {
         final Intent intent = new Intent(activity, ChooseContactActivity.class);
@@ -75,7 +78,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
         intent.putExtra(EXTRA_CONVERSATION, conversation.getUuid());
         intent.putExtra(EXTRA_SELECT_MULTIPLE, true);
         intent.putExtra(EXTRA_SHOW_ENTER_JID, true);
-        intent.putExtra(EXTRA_ACCOUNT, conversation.getAccount().getJid().asBareJid().toString());
+        intent.putExtra(EXTRA_ACCOUNT, conversation.getAccount().getJid().asBareJid().toEscapedString());
         return intent;
     }
 
@@ -321,7 +324,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
             final Intent request = getIntent();
             final Intent data = new Intent();
             data.putExtra("contact", contactJid.toString());
-            data.putExtra(EXTRA_ACCOUNT, accountJid.toString());
+            data.putExtra(EXTRA_ACCOUNT, accountJid.toEscapedString());
             data.putExtra(EXTRA_SELECT_MULTIPLE, false);
             copy(request, data);
             setResult(RESULT_OK, data);
@@ -347,7 +350,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
     private void handleActivityResult(ActivityResult activityResult) {
         if (activityResult.resultCode == RESULT_OK && activityResult.requestCode == ScanActivity.REQUEST_SCAN_QR_CODE) {
             String result = activityResult.data.getStringExtra(ScanActivity.INTENT_EXTRA_RESULT);
-            XmppUri uri = new XmppUri(result == null ? "" : result);
+            XmppUri uri = new XmppUri(Strings.nullToEmpty(result));
             if (uri.isValidJid()) {
                 showEnterJidDialog(uri);
             }
@@ -361,9 +364,9 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
         for (Account account : xmppConnectionService.getAccounts()) {
             if (account.getStatus() != Account.State.DISABLED) {
                 if (Config.DOMAIN_LOCK != null) {
-                    this.mActivatedAccounts.add(account.getJid().getLocal());
+                    this.mActivatedAccounts.add(account.getJid().getEscapedLocal());
                 } else {
-                    this.mActivatedAccounts.add(account.getJid().asBareJid().toString());
+                    this.mActivatedAccounts.add(account.getJid().asBareJid().toEscapedString());
                 }
             }
         }
@@ -378,7 +381,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         ScanActivity.onRequestPermissionResult(this, requestCode, grantResults);
     }
 
@@ -401,7 +404,7 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
         data.putExtra("contact", item.getJid().toString());
         String account = request.getStringExtra(EXTRA_ACCOUNT);
         if (account == null && item instanceof Contact) {
-            account = ((Contact) item).getAccount().getJid().asBareJid().toString();
+            account = ((Contact) item).getAccount().getJid().asBareJid().toEscapedString();
         }
         data.putExtra(EXTRA_ACCOUNT, account);
         data.putExtra(EXTRA_SELECT_MULTIPLE, false);

@@ -1,22 +1,22 @@
 package eu.siacs.conversations.ui;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentTransaction;
 import android.text.Editable;
 import android.widget.Toast;
+
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
 import java.util.Collections;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Blockable;
-import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.ListItem;
 import eu.siacs.conversations.entities.RawBlockable;
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
+import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
-import rocks.xmpp.addr.Jid;
 
 public class BlocklistActivity extends AbstractSearchableListItemActivity implements OnUpdateBlocklist {
 
@@ -36,7 +36,7 @@ public class BlocklistActivity extends AbstractSearchableListItemActivity implem
 	@Override
 	public void onBackendConnected() {
 		for (final Account account : xmppConnectionService.getAccounts()) {
-			if (account.getJid().toString().equals(getIntent().getStringExtra(EXTRA_ACCOUNT))) {
+			if (account.getJid().toEscapedString().equals(getIntent().getStringExtra(EXTRA_ACCOUNT))) {
 				this.account = account;
 				break;
 			}
@@ -80,7 +80,7 @@ public class BlocklistActivity extends AbstractSearchableListItemActivity implem
 				getString(R.string.block_jabber_id),
 				getString(R.string.block),
 				null,
-				account.getJid().asBareJid().toString(),
+				account.getJid().asBareJid().toEscapedString(),
 				true,
 				false
 		);

@@ -1,8 +1,9 @@
 package eu.siacs.conversations.entities;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -17,18 +18,18 @@ import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.InvalidJid;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class Bookmark extends Element implements ListItem {
 
-	private Account account;
+	private final Account account;
 	private WeakReference<Conversation> conversation;
 	private Jid jid;
 
 	public Bookmark(final Account account, final Jid jid) {
 		super("conference");
 		this.jid = jid;
-		this.setAttribute("jid", jid.toString());
+		this.setAttribute("jid", jid);
 		this.account = account;
 	}
 
@@ -247,5 +248,10 @@ public class Bookmark extends Element implements ListItem {
 	@Override
 	public int getAvatarBackgroundColor() {
 		return UIHelper.getColorForName(jid != null ? jid.asBareJid().toString() : getDisplayName());
+	}
+
+	@Override
+	public String getAvatarName() {
+		return getDisplayName();
 	}
 }

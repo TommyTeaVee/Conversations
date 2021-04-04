@@ -20,8 +20,6 @@ import android.os.Environment;
 import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
-import android.support.annotation.RequiresApi;
-import android.support.v4.content.FileProvider;
 import android.system.Os;
 import android.system.StructStat;
 import android.util.Base64;
@@ -29,6 +27,10 @@ import android.util.Base64OutputStream;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.LruCache;
+
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StringRes;
+import androidx.core.content.FileProvider;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -42,7 +44,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URL;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -77,7 +78,7 @@ public class FileBackend {
 
     private static final String FILE_PROVIDER = ".files";
     private static final float IGNORE_PADDING = 0.15f;
-    private XmppConnectionService mXmppConnectionService;
+    private final XmppConnectionService mXmppConnectionService;
 
     public FileBackend(XmppConnectionService service) {
         this.mXmppConnectionService = service;
@@ -222,8 +223,12 @@ public class FileBackend {
     }
 
     private static boolean hasAlpha(final Bitmap bitmap) {
-        for (int x = 0; x < bitmap.getWidth(); ++x) {
-            for (int y = 0; y < bitmap.getWidth(); ++y) {
+        final int w = bitmap.getWidth();
+        final int h = bitmap.getHeight();
+        final int yStep = Math.max(1, w / 100);
+        final int xStep = Math.max(1, h / 100);
+        for (int x = 0; x < w; x += xStep) {
+            for (int y = 0; y < h; y += yStep) {
                 if (Color.alpha(bitmap.getPixel(x, y)) < 255) {
                     return true;
                 }
@@ -277,7 +282,6 @@ public class FileBackend {
         } finally {
             if (bitmap != null) {
                 bitmap.recycle();
-                ;
             }
         }
     }
@@ -291,12 +295,7 @@ public class FileBackend {
         if (dimensions != null) {
             return dimensions;
         }
-        final int rotation;
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            rotation = extractRotationFromMediaRetriever(metadataRetriever);
-        } else {
-            rotation = 0;
-        }
+        final int rotation = extractRotationFromMediaRetriever(metadataRetriever);
         boolean rotated = rotation == 90 || rotation == 270;
         int height;
         try {
@@ -317,7 +316,6 @@ public class FileBackend {
         return rotated ? new Dimensions(width, height) : new Dimensions(height, width);
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     private static int extractRotationFromMediaRetriever(MediaMetadataRetriever metadataRetriever) {
         String r = metadataRetriever.extractMetadata(MediaMetadataRetriever.METADATA_KEY_VIDEO_ROTATION);
         try {
@@ -417,9 +415,9 @@ public class FileBackend {
         }
     }
 
-    public static void updateFileParams(Message message, URL url, long size) {
+    public static void updateFileParams(Message message, String url, long size) {
         final StringBuilder body = new StringBuilder();
-        body.append(url.toString()).append('|').append(size);
+        body.append(url).append('|').append(size);
         message.setBody(body.toString());
     }
 
@@ -596,12 +594,12 @@ public class FileBackend {
         }
     }
 
-    public boolean useImageAsIs(Uri uri) {
-        String path = getOriginalPath(uri);
+    public boolean useImageAsIs(final Uri uri) {
+        final String path = getOriginalPath(uri);
         if (path == null || isPathBlacklisted(path)) {
             return false;
         }
-        File file = new File(path);
+        final File file = new File(path);
         long size = file.length();
         if (size == 0 || size >= mXmppConnectionService.getResources().getInteger(R.integer.auto_accept_filesize)) {
             return false;
@@ -609,12 +607,15 @@ public class FileBackend {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
         try {
-            BitmapFactory.decodeStream(mXmppConnectionService.getContentResolver().openInputStream(uri), null, options);
+            final InputStream inputStream = mXmppConnectionService.getContentResolver().openInputStream(uri);
+            BitmapFactory.decodeStream(inputStream, null, options);
+            close(inputStream);
             if (options.outMimeType == null || options.outHeight <= 0 || options.outWidth <= 0) {
                 return false;
             }
             return (options.outWidth <= Config.IMAGE_SIZE && options.outHeight <= Config.IMAGE_SIZE && options.outMimeType.contains(Config.IMAGE_FORMAT.name().toLowerCase()));
         } catch (FileNotFoundException e) {
+            Log.d(Config.LOGTAG, "unable to get image dimensions", e);
             return false;
         }
     }
@@ -646,12 +647,13 @@ public class FileBackend {
             } catch (IOException e) {
                 throw new FileWriterException();
             }
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             throw new FileCopyException(R.string.error_file_not_found);
-        } catch (FileWriterException e) {
+        } catch (final FileWriterException e) {
             throw new FileCopyException(R.string.error_unable_to_create_temporary_file);
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (final SecurityException e) {
+            throw new FileCopyException(R.string.error_security_exception);
+        } catch (final IOException e) {
             throw new FileCopyException(R.string.error_io_exception);
         } finally {
             close(os);
@@ -704,8 +706,11 @@ public class FileBackend {
         return pos > 0 ? filename.substring(pos + 1) : null;
     }
 
-    private void copyImageToPrivateStorage(File file, Uri image, int sampleSize) throws FileCopyException {
-        file.getParentFile().mkdirs();
+    private void copyImageToPrivateStorage(File file, Uri image, int sampleSize) throws FileCopyException, ImageCompressionException {
+        final File parent = file.getParentFile();
+        if (parent.mkdirs()) {
+            Log.d(Config.LOGTAG, "created parent directory");
+        }
         InputStream is = null;
         OutputStream os = null;
         try {
@@ -716,18 +721,22 @@ public class FileBackend {
             if (is == null) {
                 throw new FileCopyException(R.string.error_not_an_image_file);
             }
-            Bitmap originalBitmap;
-            BitmapFactory.Options options = new BitmapFactory.Options();
-            int inSampleSize = (int) Math.pow(2, sampleSize);
+            final Bitmap originalBitmap;
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            final int inSampleSize = (int) Math.pow(2, sampleSize);
             Log.d(Config.LOGTAG, "reading bitmap with sample size " + inSampleSize);
             options.inSampleSize = inSampleSize;
             originalBitmap = BitmapFactory.decodeStream(is, null, options);
             is.close();
             if (originalBitmap == null) {
-                throw new FileCopyException(R.string.error_not_an_image_file);
+                throw new ImageCompressionException("Source file was not an image");
+            }
+            if (!"image/jpeg".equals(options.outMimeType) && hasAlpha(originalBitmap)) {
+                originalBitmap.recycle();
+                throw new ImageCompressionException("Source file had alpha channel");
             }
             Bitmap scaledBitmap = resize(originalBitmap, Config.IMAGE_SIZE);
-            int rotation = getRotation(image);
+            final int rotation = getRotation(image);
             scaledBitmap = rotate(scaledBitmap, rotation);
             boolean targetSizeReached = false;
             int quality = Config.IMAGE_QUALITY;
@@ -743,7 +752,7 @@ public class FileBackend {
                 quality -= 5;
             }
             scaledBitmap.recycle();
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             throw new FileCopyException(R.string.error_file_not_found);
         } catch (IOException e) {
             e.printStackTrace();
@@ -763,12 +772,12 @@ public class FileBackend {
         }
     }
 
-    public void copyImageToPrivateStorage(File file, Uri image) throws FileCopyException {
+    public void copyImageToPrivateStorage(File file, Uri image) throws FileCopyException, ImageCompressionException {
         Log.d(Config.LOGTAG, "copy image (" + image.toString() + ") to private storage " + file.getAbsolutePath());
         copyImageToPrivateStorage(file, image, 0);
     }
 
-    public void copyImageToPrivateStorage(Message message, Uri image) throws FileCopyException {
+    public void copyImageToPrivateStorage(Message message, Uri image) throws FileCopyException, ImageCompressionException {
         switch (Config.IMAGE_FORMAT) {
             case JPEG:
                 message.setRelativeFilePath(message.getUuid() + ".jpg");
@@ -784,14 +793,17 @@ public class FileBackend {
         updateFileParams(message);
     }
 
-    public boolean unusualBounds(Uri image) {
+    public boolean unusualBounds(final Uri image) {
         try {
-            BitmapFactory.Options options = new BitmapFactory.Options();
+            final BitmapFactory.Options options = new BitmapFactory.Options();
             options.inJustDecodeBounds = true;
-            BitmapFactory.decodeStream(mXmppConnectionService.getContentResolver().openInputStream(image), null, options);
+            final InputStream inputStream = mXmppConnectionService.getContentResolver().openInputStream(image);
+            BitmapFactory.decodeStream(inputStream, null, options);
+            close(inputStream);
             float ratio = (float) options.outHeight / options.outWidth;
             return ratio > (21.0f / 9.0f) || ratio < (9.0f / 21.0f);
-        } catch (Exception e) {
+        } catch (final Exception e) {
+            Log.w(Config.LOGTAG, "unable to detect image bounds", e);
             return false;
         }
     }
@@ -829,11 +841,11 @@ public class FileBackend {
                 } else if (mime.startsWith("video/")) {
                     thumbnail = getVideoPreview(file, size);
                 } else {
-                    Bitmap fullsize = getFullSizeImagePreview(file, size);
-                    if (fullsize == null) {
+                    final Bitmap fullSize = getFullSizeImagePreview(file, size);
+                    if (fullSize == null) {
                         throw new FileNotFoundException();
                     }
-                    thumbnail = resize(fullsize, size);
+                    thumbnail = resize(fullSize, size);
                     thumbnail = rotate(thumbnail, getRotation(file));
                     if (mime.equals("image/gif")) {
                         Bitmap withGifOverlay = thumbnail.copy(Bitmap.Config.ARGB_8888, true);
@@ -943,7 +955,7 @@ public class FileBackend {
             final Bitmap rendered = renderPdfDocument(fileDescriptor, size, true);
             drawOverlay(rendered, paintOverlayBlackPdf(rendered) ? R.drawable.open_pdf_black : R.drawable.open_pdf_white, 0.75f);
             return rendered;
-        } catch (IOException e) {
+        } catch (final IOException | SecurityException e) {
             Log.d(Config.LOGTAG, "unable to render PDF document preview", e);
             final Bitmap placeholder = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888);
             placeholder.eraseColor(0xff000000);
@@ -982,9 +994,9 @@ public class FileBackend {
     public Uri getTakePhotoUri() {
         File file;
         if (Config.ONLY_INTERNAL_STORAGE) {
-            file = new File(mXmppConnectionService.getCacheDir().getAbsolutePath(), "Camera/IMG_" + this.IMAGE_DATE_FORMAT.format(new Date()) + ".jpg");
+            file = new File(mXmppConnectionService.getCacheDir().getAbsolutePath(), "Camera/IMG_" + IMAGE_DATE_FORMAT.format(new Date()) + ".jpg");
         } else {
-            file = new File(getTakePhotoPath() + "IMG_" + this.IMAGE_DATE_FORMAT.format(new Date()) + ".jpg");
+            file = new File(getTakePhotoPath() + "IMG_" + IMAGE_DATE_FORMAT.format(new Date()) + ".jpg");
         }
         file.getParentFile().mkdirs();
         return getUriForFile(mXmppConnectionService, file);
@@ -1071,7 +1083,7 @@ public class FileBackend {
             return null;
         }
         Avatar avatar = new Avatar();
-        File file = new File(getAvatarPath(hash));
+        final File file = getAvatarFile(hash);
         FileInputStream is = null;
         try {
             avatar.size = file.length();
@@ -1104,14 +1116,14 @@ public class FileBackend {
     }
 
     public boolean isAvatarCached(Avatar avatar) {
-        File file = new File(getAvatarPath(avatar.getFilename()));
+        final File file = getAvatarFile(avatar.getFilename());
         return file.exists();
     }
 
     public boolean save(final Avatar avatar) {
         File file;
         if (isAvatarCached(avatar)) {
-            file = new File(getAvatarPath(avatar.getFilename()));
+            file = getAvatarFile(avatar.getFilename());
             avatar.size = file.length();
         } else {
             file = new File(mXmppConnectionService.getCacheDir().getAbsolutePath() + "/" + UUID.randomUUID().toString());
@@ -1133,12 +1145,12 @@ public class FileBackend {
                 mDigestOutputStream.close();
                 String sha1sum = CryptoHelper.bytesToHex(digest.digest());
                 if (sha1sum.equals(avatar.sha1sum)) {
-                    File outputFile = new File(getAvatarPath(avatar.getFilename()));
+                    final File outputFile = getAvatarFile(avatar.getFilename());
                     if (outputFile.getParentFile().mkdirs()) {
                         Log.d(Config.LOGTAG, "created avatar directory");
                     }
-                    String filename = getAvatarPath(avatar.getFilename());
-                    if (!file.renameTo(new File(filename))) {
+                    final File avatarFile = getAvatarFile(avatar.getFilename());
+                    if (!file.renameTo(avatarFile)) {
                         Log.d(Config.LOGTAG, "unable to rename " + file.getAbsolutePath() + " to " + outputFile);
                         return false;
                     }
@@ -1159,12 +1171,34 @@ public class FileBackend {
         return true;
     }
 
-    private String getAvatarPath(String avatar) {
-        return mXmppConnectionService.getFilesDir().getAbsolutePath() + "/avatars/" + avatar;
+    public void deleteHistoricAvatarPath() {
+        delete(getHistoricAvatarPath());
+    }
+
+    private void delete(final File file) {
+        if (file.isDirectory()) {
+            final File[] files = file.listFiles();
+            if (files != null) {
+                for (final File f : files) {
+                    delete(f);
+                }
+            }
+        }
+        if (file.delete()) {
+            Log.d(Config.LOGTAG, "deleted " + file.getAbsolutePath());
+        }
+    }
+
+    private File getHistoricAvatarPath() {
+        return new File(mXmppConnectionService.getFilesDir(), "/avatars/");
+    }
+
+    private File getAvatarFile(String avatar) {
+        return new File(mXmppConnectionService.getCacheDir(), "/avatars/" + avatar);
     }
 
     public Uri getAvatarUri(String avatar) {
-        return Uri.parse("file:" + getAvatarPath(avatar));
+        return Uri.fromFile(getAvatarFile(avatar));
     }
 
     public Bitmap cropCenterSquare(Uri image, int size) {
@@ -1259,9 +1293,11 @@ public class FileBackend {
     }
 
     private int calcSampleSize(Uri image, int size) throws FileNotFoundException, SecurityException {
-        BitmapFactory.Options options = new BitmapFactory.Options();
+        final BitmapFactory.Options options = new BitmapFactory.Options();
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeStream(mXmppConnectionService.getContentResolver().openInputStream(image), null, options);
+        final InputStream inputStream = mXmppConnectionService.getContentResolver().openInputStream(image);
+        BitmapFactory.decodeStream(inputStream, null, options);
+        close(inputStream);
         return calcSampleSize(options, size);
     }
 
@@ -1269,7 +1305,7 @@ public class FileBackend {
         updateFileParams(message, null);
     }
 
-    public void updateFileParams(Message message, URL url) {
+    public void updateFileParams(Message message, String url) {
         DownloadableFile file = getFile(message);
         final String mime = file.getMimeType();
         final boolean privateMessage = message.isPrivateMessage();
@@ -1279,7 +1315,7 @@ public class FileBackend {
         final boolean pdf = "application/pdf".equals(mime);
         final StringBuilder body = new StringBuilder();
         if (url != null) {
-            body.append(url.toString());
+            body.append(url);
         }
         body.append('|').append(file.getSize());
         if (image || video || (pdf && Compatibility.runsTwentyOne())) {
@@ -1357,7 +1393,7 @@ public class FileBackend {
             page.close();
             pdfRenderer.close();
             return scalePdfDimensions(new Dimensions(height, width));
-        } catch (IOException e) {
+        } catch (IOException | SecurityException e) {
             Log.d(Config.LOGTAG, "unable to get dimensions for pdf document", e);
             return new Dimensions(0, 0);
         }
@@ -1386,9 +1422,6 @@ public class FileBackend {
             return null;
         }
         Bitmap bm = cropCenter(getAvatarUri(avatar), size, size);
-        if (bm == null) {
-            return null;
-        }
         return bm;
     }
 
@@ -1420,15 +1453,22 @@ public class FileBackend {
         }
     }
 
-    public class FileCopyException extends Exception {
-        private static final long serialVersionUID = -1010013599132881427L;
-        private int resId;
+    public static class ImageCompressionException extends Exception {
 
-        public FileCopyException(int resId) {
+        ImageCompressionException(String message) {
+            super(message);
+        }
+    }
+
+
+    public static class FileCopyException extends Exception {
+        private final int resId;
+
+        private FileCopyException(@StringRes int resId) {
             this.resId = resId;
         }
 
-        public int getResId() {
+        public @StringRes int getResId() {
             return resId;
         }
     }

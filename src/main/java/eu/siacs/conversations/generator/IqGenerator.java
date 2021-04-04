@@ -29,12 +29,12 @@ import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.services.XmppConnectionService;
-import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
+import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.forms.Data;
 import eu.siacs.conversations.xmpp.pep.Avatar;
 import eu.siacs.conversations.xmpp.stanzas.IqPacket;
-import rocks.xmpp.addr.Jid;
 
 public class IqGenerator extends AbstractGenerator {
 
@@ -302,7 +302,7 @@ public class IqGenerator extends AbstractGenerator {
         if (mam.muc()) {
             packet.setTo(mam.getWith());
         } else if (mam.getWith() != null) {
-            data.put("with", mam.getWith().toString());
+            data.put("with", mam.getWith().toEscapedString());
         }
         final long start = mam.getStart();
         final long end = mam.getEnd();
@@ -334,7 +334,7 @@ public class IqGenerator extends AbstractGenerator {
     public IqPacket generateSetBlockRequest(final Jid jid, boolean reportSpam) {
         final IqPacket iq = new IqPacket(IqPacket.TYPE.SET);
         final Element block = iq.addChild("block", Namespace.BLOCKING);
-        final Element item = block.addChild("item").setAttribute("jid", jid.toEscapedString());
+        final Element item = block.addChild("item").setAttribute("jid", jid);
         if (reportSpam) {
             item.addChild("report", "urn:xmpp:reporting:0").addChild("spam");
         }
@@ -345,13 +345,13 @@ public class IqGenerator extends AbstractGenerator {
     public IqPacket generateSetUnblockRequest(final Jid jid) {
         final IqPacket iq = new IqPacket(IqPacket.TYPE.SET);
         final Element block = iq.addChild("unblock", Namespace.BLOCKING);
-        block.addChild("item").setAttribute("jid", jid.toEscapedString());
+        block.addChild("item").setAttribute("jid", jid);
         return iq;
     }
 
     public IqPacket generateSetPassword(final Account account, final String newPassword) {
         final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
-        packet.setTo(Jid.of(account.getServer()));
+        packet.setTo(account.getDomain());
         final Element query = packet.addChild("query", Namespace.REGISTER);
         final Jid jid = account.getJid();
         query.addChild("username").setContent(jid.getLocal());
@@ -372,7 +372,7 @@ public class IqGenerator extends AbstractGenerator {
         Element query = packet.query("http://jabber.org/protocol/muc#admin");
         for (Jid jid : jids) {
             Element item = query.addChild("item");
-            item.setAttribute("jid", jid.toEscapedString());
+            item.setAttribute("jid", jid);
             item.setAttribute("affiliation", affiliation);
         }
         return packet;
@@ -408,20 +408,6 @@ public class IqGenerator extends AbstractGenerator {
         return packet;
     }
 
-    public IqPacket requestP1S3Slot(Jid host, String md5) {
-        IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
-        packet.setTo(host);
-        packet.query(Namespace.P1_S3_FILE_TRANSFER).setAttribute("md5", md5);
-        return packet;
-    }
-
-    public IqPacket requestP1S3Url(Jid host, String fileId) {
-        IqPacket packet = new IqPacket(IqPacket.TYPE.GET);
-        packet.setTo(host);
-        packet.query(Namespace.P1_S3_FILE_TRANSFER).setAttribute("fileid", fileId);
-        return packet;
-    }
-
     private static String convertFilename(String name) {
         int pos = name.indexOf('.');
         if (pos != -1) {
@@ -430,7 +416,7 @@ public class IqGenerator extends AbstractGenerator {
                 ByteBuffer bb = ByteBuffer.wrap(new byte[16]);
                 bb.putLong(uuid.getMostSignificantBits());
                 bb.putLong(uuid.getLeastSignificantBits());
-                return Base64.encodeToString(bb.array(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP) + name.substring(pos, name.length());
+                return Base64.encodeToString(bb.array(), Base64.URL_SAFE | Base64.NO_PADDING | Base64.NO_WRAP) + name.substring(pos);
             } catch (Exception e) {
                 return name;
             }
@@ -442,7 +428,7 @@ public class IqGenerator extends AbstractGenerator {
     public IqPacket generateCreateAccountWithCaptcha(Account account, String id, Data data) {
         final IqPacket register = new IqPacket(IqPacket.TYPE.SET);
         register.setFrom(account.getJid().asBareJid());
-        register.setTo(Jid.of(account.getServer()));
+        register.setTo(account.getDomain());
         register.setId(id);
         Element query = register.query(Namespace.REGISTER);
         if (data != null) {
@@ -489,7 +475,7 @@ public class IqGenerator extends AbstractGenerator {
     public IqPacket enablePush(final Jid jid, final String node, final String secret) {
         IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
         Element enable = packet.addChild("enable", Namespace.PUSH);
-        enable.setAttribute("jid", jid.toString());
+        enable.setAttribute("jid", jid);
         enable.setAttribute("node", node);
         if (secret != null) {
             Data data = new Data();
@@ -504,7 +490,7 @@ public class IqGenerator extends AbstractGenerator {
     public IqPacket disablePush(final Jid jid, final String node) {
         IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
         Element disable = packet.addChild("disable", Namespace.PUSH);
-        disable.setAttribute("jid", jid.toEscapedString());
+        disable.setAttribute("jid", jid);
         disable.setAttribute("node", node);
         return packet;
     }

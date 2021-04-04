@@ -3,19 +3,18 @@ package eu.siacs.conversations.utils;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class BackupFileHeader {
 
     private static final int VERSION = 1;
 
-    private String app;
-    private Jid jid;
-    private long timestamp;
-    private byte[] iv;
-    private byte[] salt;
+    private final String app;
+    private final Jid jid;
+    private final long timestamp;
+    private final byte[] iv;
+    private final byte[] salt;
 
 
     @Override

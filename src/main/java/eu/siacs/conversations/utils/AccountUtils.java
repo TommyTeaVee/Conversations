@@ -17,7 +17,7 @@ import eu.siacs.conversations.ui.XmppActivity;
 
 public class AccountUtils {
 
-    public static final Class MANAGE_ACCOUNT_ACTIVITY;
+    public static final Class<?> MANAGE_ACCOUNT_ACTIVITY;
 
     static {
         MANAGE_ACCOUNT_ACTIVITY = getManageAccountActivityClass();
@@ -39,9 +39,9 @@ public class AccountUtils {
         for (Account account : service.getAccounts()) {
             if (account.getStatus() != Account.State.DISABLED) {
                 if (Config.DOMAIN_LOCK != null) {
-                    accounts.add(account.getJid().getLocal());
+                    accounts.add(account.getJid().getEscapedLocal());
                 } else {
-                    accounts.add(account.getJid().asBareJid().toString());
+                    accounts.add(account.getJid().asBareJid().toEscapedString());
                 }
             }
         }
@@ -78,7 +78,7 @@ public class AccountUtils {
         return pending;
     }
 
-    public static void launchManageAccounts(Activity activity) {
+    public static void launchManageAccounts(final Activity activity) {
         if (MANAGE_ACCOUNT_ACTIVITY != null) {
             activity.startActivity(new Intent(activity, MANAGE_ACCOUNT_ACTIVITY));
         } else {
@@ -86,15 +86,15 @@ public class AccountUtils {
         }
     }
 
-    public static void launchManageAccount(XmppActivity xmppActivity) {
-        Account account = getFirst(xmppActivity.xmppConnectionService);
+    public static void launchManageAccount(final XmppActivity xmppActivity) {
+        final Account account = getFirst(xmppActivity.xmppConnectionService);
         xmppActivity.switchToAccount(account);
     }
 
-    private static Class getManageAccountActivityClass() {
+    private static Class<?> getManageAccountActivityClass() {
         try {
             return Class.forName("eu.siacs.conversations.ui.ManageAccountActivity");
-        } catch (ClassNotFoundException e) {
+        } catch (final ClassNotFoundException e) {
             return null;
         }
     }

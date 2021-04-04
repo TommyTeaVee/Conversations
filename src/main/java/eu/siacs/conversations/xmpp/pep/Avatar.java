@@ -3,13 +3,13 @@ package eu.siacs.conversations.xmpp.pep;
 import android.util.Base64;
 
 import eu.siacs.conversations.xml.Element;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class Avatar {
 
-	public enum Origin { PEP, VCARD };
+	public enum Origin { PEP, VCARD }
 
-	public String type;
+    public String type;
 	public String sha1sum;
 	public String image;
 	public int height;

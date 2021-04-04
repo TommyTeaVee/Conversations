@@ -7,12 +7,9 @@
         <img src="https://inverse.chat/badge.svg?room=conversations@conference.siacs.eu"
              alt="chat on our conference room">
     </a>
-    <a href="https://travis-ci.org/siacs/Conversations">
-        <img src="https://travis-ci.org/siacs/Conversations.svg?branch=master"
+    <a href="https://travis-ci.org/inputmice/Conversations">
+        <img src="https://travis-ci.org/inputmice/Conversations.svg?branch=master"
              alt="build status">
-    </a>
-    <a href="https://bountysource.com/teams/siacs">
-        <img src="https://api.bountysource.com/badge/tracker?tracker_id=519483" alt="Bountysource">
     </a>
 </p>
 
@@ -22,7 +19,7 @@
     </a>
 </p>
 
-![screenshots](https://raw.githubusercontent.com/siacs/Conversations/master/screenshots.png)
+![screenshots](https://raw.githubusercontent.com/inputmice/Conversations/master/screenshots.png)
 
 ## Design principles
 
@@ -35,6 +32,7 @@
 
 * End-to-end encryption with [OMEMO](http://conversations.im/omemo/) or [OpenPGP](http://openpgp.org/about/)
 * Send and receive images as well as other kind of files
+* Encrypted audio and video calls (DTLS-SRTP)
 * Share your location
 * Send voice messages
 * Indication when your contact has read your message
@@ -93,23 +91,9 @@ Google [Play Store](https://play.google.com/store/apps/details?id=eu.siacs.conve
 
 Buying the App from the Play Store will also give you access to our [beta test](#beta).
 
-#### I don't have a Google Account but I would still like to make a contribution
+#### I don't have a Google Account but I would still like to make a donation
 
-I accept donations over PayPal, bank transfer and various crypto currencies. For donations via PayPal use the button below:
-
-[![Donate with PayPal](https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif)](https://www.paypal.me/ConversationsIM)
-
-**Disclaimer:** I'm not a huge fan of PayPal and their business policies. For
-larger contributions please get in touch with me beforehand and we can talk
-about bank transfer (SEPA).
-
-##### Crypto currencies
-
-Bitcoin: `3KAD8vew6tPZDjiUJNnZ3YUoUxrCEVNwFL`
-
-Bitcoin Cash: `16ABkXzYAwWz8Y5DcWFfbBRqL63g3hzEaU`
-
-Ether: `0x5c4e5239cd9c6f4a909e4e8361526e2e3c8ba9fa`
+I’m listing several options to support me financially on [my website](https://gultsch.de/donate.html). Among other things [Liberapay](https://liberapay.com/iNPUTmice/donate), [GitHub Sponsors](https://github.com/sponsors/inputmice) and bank transfer.
 
 #### How do I create an account?
 XMPP, like email, is a federated protocol, which means that there is not one company you can create an *official XMPP account* with. Instead there are hundreds, or even thousands, of providers out there. One of those providers is our very own [conversations.im](https://account.conversations.im). If you don’t like to use *conversations.im* use a web search engine of your choice to find another provider. Or maybe your university has one. Or you can run your own. Or ask a friend to run one. Once you've found one, you can use Conversations to create an account. Just select *register new account* on server within the create account dialog.
@@ -159,9 +143,9 @@ Note: This is kind of a weird quirk in OpenFire. Most other servers would just t
 
 Maybe you attempted to use the Jabber ID `test@b.tld` because `a.tld` doesn’t point to the correct host. In that case you might have to enable the extended connection settings in the expert settings of Conversations and set a host name.
 
-### I get 'Stream opening error'. What does that mean?
+#### I get 'Stream opening error'. What does that mean?
 
-In most cases this error is caused by ejabberd advertising support for TLSv1.3 but not properly supporting it. This can happen if the openssl version on the server already supports TLSv1.3 but the fast\_tls wrapper library used by ejabberd not (properly) support it. Upgrading fast\_tls and ejabberd or - theoretically - downgrading openssl should fix the issue. A work around is to explicity disable TLSv1.3 support in the ejabberd configuration. More information can be found on [this issue on the ejabberd issue tracker](https://github.com/processone/ejabberd/issues/2614).
+In most cases this error is caused by ejabberd advertising support for TLSv1.3 but not properly supporting it. This can happen if the OpenSSL version on the server already supports TLSv1.3 but the fast\_tls wrapper library used by ejabberd not (properly) support it. Upgrading fast\_tls and ejabberd or - theoretically - downgrading OpenSSL should fix the issue. A work around is to explicitly disable TLSv1.3 support in the ejabberd configuration. More information can be found on [this issue on the ejabberd issue tracker](https://github.com/processone/ejabberd/issues/2614).
 
 
 #### I’m getting this annoying permanent notification
@@ -169,9 +153,9 @@ Starting with Conversations 2.3.6 Conversations releases distributed over the Go
 
 However you can disable the notification via settings of the operating system. (Not settings in Conversations.)
 
-**The battery consumption and the entire behaviour of Conversations will remain the same (as good or as bad as it was before). Why is Google doing this to you? We have no idea.**
+**The battery consumption and the entire behavior of Conversations will remain the same (as good or as bad as it was before). Why is Google doing this to you? We have no idea.**
 
-##### Android &lt;= 7.1
+##### Android &lt;= 7.1 or Conversations from F-Droid (all Android versions)
 The foreground notification is still controlled over the expert settings within Conversations as it always has been. Whether or not you need to enable it depends on how aggressive the non-standard 'power saving' features are that your phone vendor has built into the operating system.
 
 ##### Android 8.x
@@ -193,7 +177,7 @@ You can find a detailed description of how your server, the app server and FCM a
 
 
 #### But why do I need a permanent notification if I use Google Push?
-FCM (Google Push) allows an app to wake up from *Doze* which is (as the name suggests) a hibernation feature of the Android operating system that cuts the network connection and also reduces the number of times the app is allowed to wake up (to ping the server for example). The app can ask to be excluded from doze. Non push variants of the app (from F-Droid or if the server doesn’t support it) will do this on first start up. So if you get exemption from *Doze*, or if you get regular push events sent to you, Doze should not pose a threat to Conversatons working properly. But even with *Doze* the app is still open in the background (kept in memory); it is just limited in the actions it can do. Conversations needs to stay in memory to hold certain session state (online status of contacts, join status of group chats, …). However with Android 8 Google changed all of this again and now an App that wants to stay in memory needs to have a foreground service which is visible to the user via the annoying notification. But why does Conversations need to hold that state? XMPP is a stateful protocol that has a lot of per-session information; packets need to be counted, presence information needs to be held, some features like Message Carbons get activated once per session, MAM catchup happens once, service discovery happens only once; the list goes on. When Conversations was created in early 2014 none of this was a problem because apps were just allowed to stay in memory. Basically every XMPP client out there holds that information in memory because it would be a lot more complicated trying to persist it to disk. An entire rewrite of Conversations in the year 2019 would attempt to do that and would probably succeed however it would require exactly that; a complete rewrite which is not feasible right now. That’s by the way also the reason why it is difficult to write an XMPP client on iOS. Or more broadly put this is also the reason why other protocols are designed as or migrated to stateless protocols (often based on HTTP); take for example the migration of IMAP to [JMAP](https://jmap.io/).
+FCM (Google Push) allows an app to wake up from *Doze* which is (as the name suggests) a hibernation feature of the Android operating system that cuts the network connection and also reduces the number of times the app is allowed to wake up (to ping the server for example). The app can ask to be excluded from doze. Non push variants of the app (from F-Droid or if the server doesn’t support it) will do this on first start up. So if you get exemption from *Doze*, or if you get regular push events sent to you, Doze should not pose a threat to Conversatons working properly. But even with *Doze* the app is still open in the background (kept in memory); it is just limited in the actions it can do. Conversations needs to stay in memory to hold certain session state (online status of contacts, join status of group chats, …). However with Android 8 Google changed all of this again and now an App that wants to stay in memory needs to have a foreground service which is visible to the user via the annoying notification. But why does Conversations need to hold that state? XMPP is a statefull protocol that has a lot of per-session information; packets need to be counted, presence information needs to be held, some features like Message Carbons get activated once per session, MAM catch-up happens once, service discovery happens only once; the list goes on. When Conversations was created in early 2014 none of this was a problem because apps were just allowed to stay in memory. Basically every XMPP client out there holds that information in memory because it would be a lot more complicated trying to persist it to disk. An entire rewrite of Conversations in the year 2019 would attempt to do that and would probably succeed however it would require exactly that; a complete rewrite which is not feasible right now. That’s by the way also the reason why it is difficult to write an XMPP client on iOS. Or more broadly put this is also the reason why other protocols are designed as or migrated to stateless protocols (often based on HTTP); take for example the migration of IMAP to [JMAP](https://jmap.io/).
 
 #### Conversations doesn’t work for me. Where can I get help?
 
@@ -291,11 +275,11 @@ and introduce yourself to `iNPUTmice` so he can approve your join request.
 #### How do I backup / move Conversations to a new device?
 On the one hand Conversations supports Message Archive Management to keep a server side history of your messages so when migrating to a new device that device can display your entire history. However that does not work if you enable OMEMO due to its forward secrecy. (Read [The State of Mobile XMPP in 2016](https://gultsch.de/xmpp_2016.html) especially the section on encryption.)
 
-As of version 2.4.0 an integrated Backup & Restore function will help with this, go to Settings and you’ll find a setting called Create backup. A notification will pop-up during the creation process that will announce you when it's ready. After the files, one for each account, are created, you can move the **Conversations** folder *(if you want your old media files too)* or only the **Conversations/Backup** folder *(for OMEMO keys and history only)* to your new device (or to a storage place) where a freshly installed Conversations can restore each account. Don't forget to enable the accounts after a succesful restore.
+As of version 2.4.0 an integrated Backup & Restore function will help with this, go to Settings and you’ll find a setting called Create backup. A notification will pop-up during the creation process that will announce you when it's ready. After the files, one for each account, are created, you can move the **Conversations** folder *(if you want your old media files too)* or only the **Conversations/Backup** folder *(for OMEMO keys and history only)* to your new device (or to a storage place) where a freshly installed Conversations can restore each account. Don't forget to enable the accounts after a successfull restore.
 
 This backup method will include your OMEMO keys. Due to forward secrecy you will not be able to recover messages sent and received between creating the backup and restoring it. If you have a server side archive (MAM) those messages will be retrieved but displayed as *unable to decrypt*. For technical reasons you might also lose the first message you either sent or receive after the restore; for each conversation you have. This message will then also show up as *unable to decrypt*, but this will automatically recover itself as long as both participants are on Conversations 2.3.11+. Note that this doesn’t happen if you just transfer to a new phone and no messages have been exchanged between backup and restore.
 
-In the vast, vast majority of cases you won’t have to manually delete OMEMO keys or do anything like that. Conversations only introduced the offical backup feature in 2.4.0 after making sure the *OMEMO self healing* mechanism introduced in 2.3.11 works fine.
+In the vast, vast majority of cases you won’t have to manually delete OMEMO keys or do anything like that. Conversations only introduced the official backup feature in 2.4.0 after making sure the *OMEMO self healing* mechanism introduced in 2.3.11 works fine.
 
 **WARNING**: Be sure to know your accounts passwords or find ways to reset them **before** doing the backup as the files are encrypted using those passwords and the Restore process will ask for them.  
 **WARNING**: Do not use the restore backup feature in an attempt to clone (run simultaneously) an installation. Restoring a backup is only meant for migrations or in case you’ve lost the original device.
@@ -318,7 +302,7 @@ merge it if I don't at least you and like minded people get to enjoy it.
 
 #### I need a feature and I need it now!
 
-I am available for hire. Contact me via XMPP: `inputmice@siacs.eu`
+I am available for hire. Find contact information on [my website](https://gultsch.de).
 
 ### Security
 
@@ -355,7 +339,7 @@ OMEMO has two requirements: Your server and the server of your contact need to s
 OMEMO encryption works only in private (members only) conferences that are non-anonymous. Non-anonymous (being able to discover the real JID of other participants) is a technical requirement to discover the key material. Members only is a sort of arbitrary requirement imposed by Conversations. (see 'OMEMO is grayed out')
 
 The server of all participants need to pass the OMEMO [Compliance Test](https://conversations.im/compliance/).
-In other words they either need to run Ejabberd 18.01+ or Prosody 0.11+.
+In other words they either need to run ejabberd 18.01+ or Prosody 0.11+.
 
 (Alternatively it would also work if all participants had each other in their contact list; But that rarely is the case in larger group chats.)
 
@@ -389,7 +373,7 @@ There are XMPP Clients available for all major platforms.
 #### Windows / Linux
 For your desktop computer we recommend that you use [Gajim](https://gajim.org). You need to install the plugins `OMEMO`, `HTTP Upload` and `URL image preview` to get the best compatibility with Conversations. Plugins can be installed from within the app.
 #### iOS
-Unfortunately we don‘t have a recommendation for iPhones right now. There are two clients available [ChatSecure](https://chatsecure.org/) and [Monal](https://monal.im/). Both with their own pros and cons.
+Unfortunately we don‘t have a recommendation for iPhones right now. There are three clients available [Siskin](https://siskin.im/), [ChatSecure](https://chatsecure.org/) and [Monal](https://monal.im/). Each with their own pros and cons.
 
 
 ### Development
@@ -401,35 +385,22 @@ you can get access to the the latest beta version by signing up using [this link
 
 #### How do I build Conversations
 
+**Note:** Starting with version 2.8.0 you will need to compile libwebrtc.
+[Instructions](https://webrtc.github.io/webrtc-org/native-code/android/) can be found on the WebRTC
+website. Place the resulting libwebrtc.aar in the `libs/` directory. The PlayStore release currently
+uses the stable M81 release and renamed the file name to `libwebrtc-m81.aar` put potentially you can
+reference any file name by modifying `build.gradle`.
+
 Make sure to have ANDROID_HOME point to your Android SDK. Use the Android SDK Manager to install missing dependencies.
 
-    git clone https://github.com/siacs/Conversations.git
+    git clone https://github.com/inputmice/Conversations.git
     cd Conversations
     ./gradlew assembleConversationsFreeSystemDebug
 
 There are two build flavors available. *free* and *playstore*. Unless you know what you are doing you only need *free*.
 
 
-[![Build Status](https://travis-ci.org/siacs/Conversations.svg?branch=development)](https://travis-ci.org/siacs/Conversations)
-
-#### How do I update/add external libraries?
-
-If the library you want to update is in Maven Central or JCenter (or has its own
-Maven repo), add it or update its version in `build.gradle`. If the library is
-in the `libs/` directory, you can update it using a subtree merge by doing the
-following (using `minidns` as an example):
-
-    git remote add minidns https://github.com/rtreffer/minidns.git
-    git fetch minidns
-    git merge -s subtree minidns master
-
-To add a new dependency to the `libs/` directory (replacing "name", "branch" and
-"url" as necessary):
-
-    git remote add name url
-    git merge -s ours --no-commit name/branch
-    git read-tree --prefix=libs/name -u name/branch
-    git commit -m "Subtree merged in name"
+[![Build Status](https://travis-ci.org/inputmice/Conversations.svg?branch=development)](https://travis-ci.org/inputmice/Conversations)
 
 #### How do I debug Conversations
 
@@ -461,4 +432,4 @@ Play Store version or the current HEAD. If you are having problems connecting to
 your XMPP server your file transfer doesn’t work as expected please always
 include a logcat debug output with your issue (see above).
 
-[issues]: https://github.com/siacs/Conversations/issues
+[issues]: https://github.com/inputmice/Conversations/issues

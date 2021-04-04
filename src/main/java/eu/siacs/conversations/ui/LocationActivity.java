@@ -14,10 +14,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
-import android.support.annotation.BoolRes;
-import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.MenuItem;
+
+import androidx.annotation.BoolRes;
+import androidx.annotation.NonNull;
 
 import org.osmdroid.api.IGeoPoint;
 import org.osmdroid.api.IMapController;
@@ -29,8 +30,6 @@ import org.osmdroid.views.CustomZoomButtonsController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.CopyrightOverlay;
 import org.osmdroid.views.overlay.Overlay;
-
-import java.io.IOException;
 
 import eu.siacs.conversations.BuildConfig;
 import eu.siacs.conversations.Config;
@@ -97,11 +96,7 @@ public abstract class LocationActivity extends ActionBarActivity implements Loca
 		config.load(ctx, getPreferences());
 		config.setUserAgentValue(BuildConfig.APPLICATION_ID + "/" + BuildConfig.VERSION_CODE);
 		if (QuickConversationsService.isConversations() && getBooleanPreference("use_tor", R.bool.use_tor)) {
-			try {
-				config.setHttpProxy(HttpConnectionManager.getProxy());
-			} catch (IOException e) {
-				throw new RuntimeException("Unable to configure proxy");
-			}
+			config.setHttpProxy(HttpConnectionManager.getProxy());
 		}
 	}
 

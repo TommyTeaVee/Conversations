@@ -1,5 +1,6 @@
 package eu.siacs.conversations.utils;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,9 +10,10 @@ import android.os.Build;
 import android.preference.Preference;
 import android.preference.PreferenceCategory;
 import android.preference.PreferenceManager;
-import android.support.annotation.BoolRes;
-import android.support.v4.content.ContextCompat;
 import android.util.Log;
+
+import androidx.annotation.BoolRes;
+import androidx.core.content.ContextCompat;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,8 +32,11 @@ public class Compatibility {
             "led",
             "notification_ringtone",
             "notification_headsup",
-            "vibrate_on_notification");
-    private static final List<String> UNUESD_SETTINGS_PRE_TWENTYSIX = Collections.singletonList("more_notification_settings");
+            "vibrate_on_notification"
+    );
+    private static final List<String> UNUESD_SETTINGS_PRE_TWENTYSIX = Collections.singletonList(
+            "message_notification_settings"
+    );
 
 
     public static boolean hasStoragePermission(Context context) {
@@ -131,7 +136,18 @@ public class Compatibility {
                 context.startService(intent);
             }
         } catch (RuntimeException e) {
-            Log.d(Config.LOGTAG, context.getClass().getSimpleName()+" was unable to start service");
+            Log.d(Config.LOGTAG, context.getClass().getSimpleName() + " was unable to start service");
+        }
+    }
+
+
+    @SuppressLint("UnsupportedChromeOsCameraSystemFeature")
+    public static boolean hasFeatureCamera(final Context context) {
+        final PackageManager packageManager = context.getPackageManager();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            return packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
+        } else {
+            return packageManager.hasSystemFeature(PackageManager.FEATURE_CAMERA);
         }
     }
 }

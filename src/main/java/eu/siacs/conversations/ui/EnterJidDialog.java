@@ -2,15 +2,16 @@ package eu.siacs.conversations.ui;
 
 import android.app.Activity;
 import android.app.Dialog;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.v4.app.DialogFragment;
-import android.support.v7.app.AlertDialog;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.ArrayAdapter;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AlertDialog;
+import androidx.databinding.DataBindingUtil;
+import androidx.fragment.app.DialogFragment;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +25,7 @@ import eu.siacs.conversations.databinding.EnterJidDialogBinding;
 import eu.siacs.conversations.ui.adapter.KnownHostsAdapter;
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 import eu.siacs.conversations.ui.util.DelayedHintHelper;
-import rocks.xmpp.addr.Jid;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class EnterJidDialog extends DialogFragment implements OnBackendConnected, TextWatcher {
 
@@ -146,16 +147,16 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
 		}
 		try {
 			if (Config.DOMAIN_LOCK != null) {
-				accountJid = Jid.of((String) binding.account.getSelectedItem(), Config.DOMAIN_LOCK, null);
+				accountJid = Jid.ofEscaped((String) binding.account.getSelectedItem(), Config.DOMAIN_LOCK, null);
 			} else {
-				accountJid = Jid.of((String) binding.account.getSelectedItem());
+				accountJid = Jid.ofEscaped((String) binding.account.getSelectedItem());
 			}
 		} catch (final IllegalArgumentException e) {
 			return;
 		}
 		final Jid contactJid;
 		try {
-			contactJid = Jid.of(binding.jid.getText().toString());
+			contactJid = Jid.ofEscaped(binding.jid.getText().toString());
 		} catch (final IllegalArgumentException e) {
 			binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
 			return;
@@ -168,7 +169,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
 				issuedWarning = true;
 				return;
 			}
-			if (suspiciousSubDomain(contactJid.getDomain())) {
+			if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
 				binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_channel));
 				dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
 				issuedWarning = true;
