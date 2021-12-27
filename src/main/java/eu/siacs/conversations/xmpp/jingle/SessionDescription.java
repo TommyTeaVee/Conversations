@@ -156,7 +156,10 @@ public class SessionDescription {
             final IceUdpTransportInfo.Fingerprint fingerprint = transport.getFingerprint();
             if (fingerprint != null) {
                 mediaAttributes.put("fingerprint", fingerprint.getHash() + " " + fingerprint.getContent());
-                mediaAttributes.put("setup", fingerprint.getSetup());
+                final IceUdpTransportInfo.Setup setup = fingerprint.getSetup();
+                if (setup != null) {
+                    mediaAttributes.put("setup", setup.toString().toLowerCase(Locale.ROOT));
+                }
             }
             final ImmutableList.Builder<Integer> formatBuilder = new ImmutableList.Builder<>();
             for (RtpDescription.PayloadType payloadType : description.getPayloadTypes()) {
@@ -215,7 +218,7 @@ public class SessionDescription {
                 mediaAttributes.put("extmap", id + " " + uri);
             }
 
-            if (Config.PROCESS_EXTMAP_ALLOW_MIXED && description.hasChild("extmap-allow-mixed", Namespace.JINGLE_RTP_HEADER_EXTENSIONS)) {
+            if (description.hasChild("extmap-allow-mixed", Namespace.JINGLE_RTP_HEADER_EXTENSIONS)) {
                 mediaAttributes.put("extmap-allow-mixed", "");
             }
 

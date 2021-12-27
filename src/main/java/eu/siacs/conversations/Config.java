@@ -6,6 +6,7 @@ import android.net.Uri;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import eu.siacs.conversations.crypto.XmppDomainVerifier;
 import eu.siacs.conversations.xmpp.Jid;
@@ -35,7 +36,7 @@ public final class Config {
         return (ENCRYPTION_MASK & (ENCRYPTION_MASK - 1)) != 0;
     }
 
-    public static final String LOGTAG = BuildConfig.LOGTAG;
+    public static final String LOGTAG = BuildConfig.APP_NAME.toLowerCase(Locale.US);
 
     public static final Jid BUG_REPORTS = Jid.of("bugs@conversations.im");
     public static final Uri HELP = Uri.parse("https://help.conversations.im");
@@ -108,7 +109,6 @@ public final class Config {
 
     public static final boolean USE_BOOKMARKS2 = false;
 
-    public static final boolean PROCESS_EXTMAP_ALLOW_MIXED = false;
     public static final boolean DISABLE_PROXY_LOOKUP = false; //useful to debug ibb
     public static final boolean USE_DIRECT_JINGLE_CANDIDATES = true;
     public static final boolean DISABLE_HTTP_UPLOAD = false;
@@ -119,6 +119,7 @@ public final class Config {
     public static final boolean ENCRYPT_ON_HTTP_UPLOADED = false;
 
     public static final boolean X509_VERIFICATION = false; //use x509 certificates to verify OMEMO keys
+    public static final boolean REQUIRE_RTP_VERIFICATION = false; //require a/v calls to be verified with OMEMO
 
     public static final boolean ONLY_INTERNAL_STORAGE = false; //use internal storage instead of sdcard to save attachments
 
@@ -200,4 +201,9 @@ public final class Config {
         public final static float LOCATION_FIX_SPACE_DELTA = 10; // m
         public final static int LOCATION_FIX_SIGNIFICANT_TIME_DELTA = 1000 * 60 * 2; // ms
     }
+
+    // How deep nested quotes should be displayed. '2' means one quote nested in another.
+    public static final int QUOTE_MAX_DEPTH = 7;
+    // How deep nested quotes should be created on quoting a message.
+    public static final int QUOTING_MAX_DEPTH = 1;
 }
